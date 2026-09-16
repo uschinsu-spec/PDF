@@ -1,0 +1,47 @@
+// PDF made by Nghĩa V6.7 - visual insert pages + robust OCR + image to PDF
+(()=>{
+const q=s=>document.querySelector(s);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let insertUI={sourceFile:null,sourcePdfjs:null,sourceCount:0,selected:new Set(),after:0};
+const oldLoadFiles=loadFiles;
+const oldRun=run;
+const oldSetupControls=setupControls;
+
+function canvasBlob(canvas,type='image/png',quality=.95){return new Promise((res,rej)=>canvas.toBlob(b=>b?res(b):rej(new Error('Không tạo được ảnh từ canvas')),type,quality));}
+async function renderPdfThumb(pdfjs,pageIndex,scale=.24){const p=await pdfjs.getPage(pageIndex+1),vp=p.getViewport({scale}),c=document.createElement('canvas');c.width=Math.ceil(vp.width);c.height=Math.ceil(vp.height);await p.render({canvasContext:c.getContext('2d',{alpha:false}),viewport:vp,background:'rgb(255,255,255)'}).promise;return c;}
+function setStatus(s){const el=q('#status');if(el)el.textContent=s;}
+
+// ---------- CHÈN TRANG PDF: preview giống tổ chức trang ----------
+async function setupInsertVisual(){
+ const ed=q('#editor'); if(!ed||!state.pdfjs)return;
+ ed.classList.remove('hidden');
+ insertUI.after=state.pdfjs.numPages;
+ const inp=q('#insertAfter'); if(inp)inp.value=insertUI.after;
+ ed.innerHTML=`<div style="padding:12px 4px"><div style="font-weight:800;margin:0 0 8px">1. Chọn vị trí chèn trên PDF chính</div><div id="insertBasePages" class="pages"></div><div style="font-weight:800;margin:18px 0 8px">2. Chọn PDF cần chèn và các trang muốn chèn</div><div id="insertSourceInfo" style="font-size:13px;color:#64748b;margin-bottom:8px">Chưa chọn PDF nguồn.</div><div id="insertSourcePages" class="pages"></div></div>`;
+ const root=q('#insertBasePages');
+ for(let i=0;i<state.pdfjs.numPages;i++){
+   const slot=document.createElement('button'); slot.type='button'; slot.className='page insert-slot'; slot.style.minHeight='58px'; slot.style.border='2px dashed #e5322d'; slot.innerHTML=`<b>＋ Chèn trước trang ${i+1}</b>`; slot.onclick=()=>selectInsertAfter(i); root.append(slot);
+   const c=await renderPdfThumb(state.pdfjs,i,.24),d=document.createElement('div'); d.className='page'; d.append(c); d.insertAdjacentHTML('beforeend',`<div class="num">Trang ${i+1}</div>`); root.append(d);
+ }
+ const end=document.createElement('button');end.type='button';end.className='page insert-slot selected';end.style.minHeight='58px';end.style.border='2px dashed #e5322d';end.innerHTML='<b>＋ Chèn sau trang cuối</b>';end.onclick=()=>selectInsertAfter(state.pdfjs.numPages);root.append(end);
+ const file=q('#insertFile');if(file)file.onchange=async e=>{const f=e.target.files?.[0];if(f)await loadInsertSource(f)};
+}
+function selectInsertAfter(after){insertUI.after=after;const inp=q('#insertAfter');if(inp)inp.value=after;document.querySelectorAll('.insert-slot').forEach((x,i)=>x.classList.toggle('selected',i===after));setStatus(after===0?'Sẽ chèn ở đầu tài liệu':`Sẽ chèn sau trang ${after}`);}
+async function loadInsertSource(f){
+ try{setStatus('Đang đọc PDF cần chèn…');insertUI.sourceFile=f;const buf=await f.arrayBuffer();insertUI.sourcePdfjs=await pdfjsLib.getDocument({data:new Uint8Array(buf.slice(0))}).promise;insertUI.sourceCount=insertUI.sourcePdfjs.numPages;insertUI.selected=new Set([...Array(insertUI.sourceCount).keys()]);const info=q('#insertSourceInfo');if(info)info.innerHTML=`<b>${esc(f.name)}</b> • ${insertUI.sourceCount} trang &nbsp; <button type="button" id="insertAll">Chọn tất cả</button> <button type="button" id="insertNone">Bỏ chọn</button>`;const root=q('#insertSourcePages');root.innerHTML='';for(let i=0;i<insertUI.sourceCount;i++){const c=await renderPdfThumb(insertUI.sourcePdfjs,i,.24),d=document.createElement('div');d.className='page selected';d.append(c);d.insertAdjacentHTML('beforeend',`<div class="num">✓ Trang ${i+1}</div>`);d.onclick=()=>{insertUI.selected.has(i)?insertUI.selected.delete(i):insertUI.selected.add(i);d.classList.toggle('selected',insertUI.selected.has(i));d.querySelector('.num').textContent=`${insertUI.selected.has(i)?'✓ ':' '}Trang ${i+1}`};root.append(d)}q('#insertAll').onclick=()=>{insertUI.selected=new Set([...Array(insertUI.sourceCount).keys()]);loadInsertSourcePreviewOnly()};q('#insertNone').onclick=()=>{insertUI.selected.clear();loadInsertSourcePreviewOnly()};setStatus('Chọn trang cần chèn rồi bấm Thực hiện.')}catch(e){console.error(e);toast('Không đọc được PDF cần chèn.');setStatus('Lỗi PDF cần chèn')}}
+function loadInsertSourcePreviewOnly(){document.querySelectorAll('#insertSourcePages .page').forEach((d,i)=>{const on=insertUI.selected.has(i);d.classList.toggle('selected',on);d.querySelector('.num').textContent=`${on?'✓ ':' '}Trang ${i+1}`})}
+async function runInsertVisual(){const f=insertUI.sourceFile||q('#insertFile')?.files?.[0];if(!f)throw new Error('Hãy chọn PDF cần chèn');const ids=[...insertUI.selected].sort((a,b)=>a-b);if(!ids.length)throw new Error('Hãy chọn ít nhất 1 trang cần chèn');setStatus('Đang chèn trang…');progress(10);const base=await PDFDocument.load(await state.files[0].arrayBuffer()),src=await PDFDocument.load(await f.arrayBuffer()),after=Math.max(0,Math.min(base.getPageCount(),insertUI.after));const ps=await base.copyPages(src,ids);ps.forEach((pg,k)=>base.insertPage(after+k,pg));return save(base,'pdf-da-chen-trang.pdf')}
+
+// ---------- ẢNH -> PDF: hỗ trợ JPG/PNG/WebP và kéo thả thứ tự ----------
+async function setupImagePreview(){const ed=q('#editor');if(!ed)return;ed.classList.remove('hidden');ed.innerHTML='<div style="font-weight:800;margin-bottom:10px">Xem trước & kéo thả để sắp xếp ảnh</div><div id="imgPdfPages" class="pages"></div>';const root=q('#imgPdfPages');for(let i=0;i<state.files.length;i++){const f=state.files[i],url=URL.createObjectURL(f),d=document.createElement('div');d.className='page';d.draggable=true;d.dataset.idx=i;d.innerHTML=`<img src="${url}" style="width:100%;height:180px;object-fit:contain;display:block"><div class="num">${i+1}. ${esc(f.name)}</div>`;d.ondragstart=()=>d.classList.add('dragging');d.ondragend=()=>d.classList.remove('dragging');d.ondragover=e=>e.preventDefault();d.ondrop=e=>{e.preventDefault();const from=+document.querySelector('.dragging').dataset.idx,to=+d.dataset.idx,[x]=state.files.splice(from,1);state.files.splice(to,0,x);renderFiles();setupImagePreview()};root.append(d)}}
+async function imageFileToPngBytes(file){let bmp;try{bmp=await createImageBitmap(file,{imageOrientation:'from-image'})}catch{bmp=await createImageBitmap(file)}const c=document.createElement('canvas');c.width=bmp.width;c.height=bmp.height;const cx=c.getContext('2d',{alpha:true});cx.drawImage(bmp,0,0);if(bmp.close)bmp.close();const blob=await canvasBlob(c,'image/png');return {bytes:new Uint8Array(await blob.arrayBuffer()),w:c.width,h:c.height}}
+async function runImageToPdf(){if(!state.files.length)throw new Error('Hãy chọn ít nhất 1 ảnh');setStatus('Đang tạo PDF từ ảnh…');const out=await PDFDocument.create();for(let i=0;i<state.files.length;i++){const r=await imageFileToPngBytes(state.files[i]),img=await out.embedPng(r.bytes),p=out.addPage([r.w,r.h]);p.drawImage(img,{x:0,y:0,width:r.w,height:r.h});progress(10+80*(i+1)/state.files.length)}return save(out,'anh-thanh-pdf.pdf')}
+
+// ---------- OCR: worker riêng, progress rõ, fallback ngôn ngữ ----------
+async function runOCRRobust(){const ids=range(q('#pagesRange').value,state.pdfjs.numPages),lang=q('#ocrLang').value;if(!ids.length)throw new Error('Phạm vi trang OCR không hợp lệ');if(!window.Tesseract)throw new Error('Thư viện OCR chưa tải được');let worker=null,text='';try{setStatus('Đang khởi tạo OCR…');worker=await Tesseract.createWorker(lang,1,{logger:m=>{if(m.status==='recognizing text'){const pct=Math.round((m.progress||0)*100);setStatus(`OCR ${pct}%…`)}}});for(let k=0;k<ids.length;k++){const p=await state.pdfjs.getPage(ids[k]+1),vp=p.getViewport({scale:2}),c=document.createElement('canvas');c.width=Math.ceil(vp.width);c.height=Math.ceil(vp.height);await p.render({canvasContext:c.getContext('2d',{alpha:false}),viewport:vp,background:'rgb(255,255,255)'}).promise;const r=await worker.recognize(c);text+=`\n\n--- Trang ${ids[k]+1} ---\n${r.data.text||''}`;progress(5+90*(k+1)/ids.length)}download(new Blob([text],{type:'text/plain;charset=utf-8'}),'ocr.txt','text/plain');setStatus('OCR hoàn tất');toast('OCR hoàn tất');progress(0,true)}catch(e){console.error('OCR ERROR',e);throw new Error('OCR lỗi: '+(e?.message||e))}finally{if(worker)try{await worker.terminate()}catch{}}}
+
+setupControls=function(){oldSetupControls();if(state.tool==='insertpages'){const c=q('#controls');const n=state.pdf?.getPageCount()||0;c.innerHTML=`<label>PDF cần chèn<input id="insertFile" type="file" accept="application/pdf"></label><label>Vị trí đã chọn<input id="insertAfter" type="number" min="0" max="${n}" value="${n}" readonly></label>`;q('#runBtn').textContent='Chèn các trang đã chọn'}else if(state.tool==='ocr'){q('#runBtn').textContent='Chạy OCR & tải TXT'}else if(state.tool==='img2pdf'){q('#runBtn').textContent='Tạo PDF từ ảnh'}};
+loadFiles=async function(files){await oldLoadFiles(files);if(state.tool==='insertpages'&&state.pdfjs)await setupInsertVisual();if(state.tool==='img2pdf')await setupImagePreview()};
+run=async function(){try{if(state.tool==='insertpages')return await runInsertVisual();if(state.tool==='img2pdf')return await runImageToPdf();if(state.tool==='ocr')return await runOCRRobust();return await oldRun()}catch(e){console.error(e);setStatus('Lỗi');toast(e?.message||String(e));progress(0,true)}};
+const rb=q('#runBtn');if(rb)rb.onclick=()=>run();
+})();
