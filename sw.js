@@ -1,13 +1,14 @@
-const CACHE='pdf-made-by-nghia-20260916f';
+const CACHE='pdf-made-by-nghia-20260918a';
 const SHELL=[
  './','./index.html','./manifest.webmanifest',
- './assets/app.css?v=20260916f',
- './assets/app.js?v=20260916f',
- './assets/cutpaste-editor.js?v=20260916f',
- './assets/fontkit-loader.js?v=20260916f',
- './assets/text-editor.js?v=20260916f',
- './assets/advanced-tools.js?v=20260916f',
- './assets/runtime-guard.js?v=20260916f'
+ './assets/app.css?v=20260918a',
+ './assets/app.js?v=20260918a',
+ './assets/delete-insert-fix.js?v=20260918a',
+ './assets/cutpaste-editor.js?v=20260918a',
+ './assets/fontkit-loader.js?v=20260918a',
+ './assets/text-editor.js?v=20260918a',
+ './assets/advanced-tools.js?v=20260918a',
+ './assets/runtime-guard.js?v=20260918a'
 ];
 self.addEventListener('install',e=>{
  self.skipWaiting();
