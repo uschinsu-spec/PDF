@@ -1,10 +1,10 @@
-const CACHE='pdf-made-by-nghia-20260918a';
+const CACHE='pdf-made-by-nghia-20260922b';
 const SHELL=[
  './','./index.html','./manifest.webmanifest',
  './assets/app.css?v=20260918a',
  './assets/app.js?v=20260918a',
  './assets/delete-insert-fix.js?v=20260918a',
- './assets/cutpaste-editor.js?v=20260918a',
+ './assets/cutpaste-editor.js?v=20260922b',
  './assets/fontkit-loader.js?v=20260918a',
  './assets/text-editor.js?v=20260918a',
  './assets/advanced-tools.js?v=20260918a',
