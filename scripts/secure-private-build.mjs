@@ -15,6 +15,7 @@ const required = [
   'wasm/pymupdf/dist/index.js',
   'wasm/ghostscript/assets/gs.js',
   'wasm/cpdf/coherentpdf.browser.min.js',
+  'ocr/fonts/NotoSans-Regular.ttf',
   'ocr/worker.min.js',
   'ocr/lang/vie.traineddata.gz',
   'ocr/lang/eng.traineddata.gz'
