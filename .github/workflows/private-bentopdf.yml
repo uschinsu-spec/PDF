@@ -1,0 +1,93 @@
+name: Private BentoPDF - build and deploy
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: private-pdf-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HUSKY: "0"
+      NODE_OPTIONS: --max-old-space-size=4096
+      BASE_URL: /PDF/
+      SITE_URL: https://uschinsu-spec.github.io/PDF
+      VITE_USE_CDN: "false"
+      VITE_DEFAULT_LANGUAGE: vi
+      VITE_BRAND_NAME: PDF made by Nghĩa
+      VITE_FOOTER_TEXT: PDF made by Nghĩa - xử lý tài liệu trong trình duyệt
+      DISABLE_GITHUB_STARS: "true"
+      VITE_WASM_PYMUPDF_URL: /PDF/wasm/pymupdf/
+      VITE_WASM_GS_URL: /PDF/wasm/ghostscript/assets/
+      VITE_WASM_CPDF_URL: /PDF/wasm/cpdf/
+      VITE_TESSERACT_WORKER_URL: /PDF/ocr/worker.min.js
+      VITE_TESSERACT_CORE_URL: /PDF/ocr/core
+      VITE_TESSERACT_LANG_URL: /PDF/ocr/lang
+      VITE_TESSERACT_AVAILABLE_LANGUAGES: eng,vie
+      VITE_CORS_PROXY_URL: ""
+    steps:
+      - name: Checkout PDF repo with pinned BentoPDF source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: vendor/bentopdf/package-lock.json
+
+      - name: Install BentoPDF build dependencies
+        working-directory: vendor/bentopdf
+        run: npm ci --no-audit --no-fund
+
+      - name: Package PDF engines + Vietnamese/English OCR locally
+        run: node scripts/prepare-private-bento.mjs
+
+      - name: Run upstream tests
+        working-directory: vendor/bentopdf
+        run: npm run test:run
+
+      - name: Build all PDF tools for this GitHub Pages path
+        working-directory: vendor/bentopdf
+        run: npm run build
+
+      - name: Enforce same-origin policy and verify compiled assets
+        run: node scripts/secure-private-build.mjs
+
+      - name: Report output size
+        run: du -sh vendor/bentopdf/dist
+
+      - name: Publish private build artifact to GitHub Pages
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: vendor/bentopdf/dist
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: verify-and-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy verified same-origin static site
+        id: deployment
+        uses: actions/deploy-pages@v4
