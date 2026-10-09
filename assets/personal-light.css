@@ -1,1 +1,21 @@
 :root,:root.dark{--red:#2563eb;--ink:#20242b;--muted:#687280;--line:#e8ebef;--bg:#f8fafc;--card:#fff;--shadow:0 5px 22px #1422370e;color-scheme:light}body,:root.dark body{background:#fff;color:var(--ink)}header,:root.dark header{height:64px;background:#fffffffa;border-bottom:1px solid #edf0f3;box-shadow:none}.brand b{background:#20242b!important}.brand span span{color:#20242b!important}.tools-top{padding-top:36px}.sectionhead h2{font-size:26px}.grid{gap:12px}.tool{min-height:145px;padding:18px;border-radius:12px;box-shadow:none}.tool:hover{transform:none;border-color:#c4d5ed;background:#fbfdff;box-shadow:0 3px 12px #1422370a}.tool .ico,:root.dark .tool .ico{background:#f3f6f9;border-radius:10px;width:42px;height:42px}.tool h3{font-size:15px}.workspace{border-radius:14px;box-shadow:0 5px 24px #1422370c}.primary,.cta{background:#2563eb;border-radius:9px}.drop{background:#fafbfd;border:1.5px dashed #ccd5e1}.drop.drag{background:#eff6ff}.editor,:root.dark .editor{background:#f8fafc}.page.selected,.thumb.active{border-color:#2563eb}.privacy>div{border-radius:12px;padding:20px}footer{background:#fff}@media(max-width:560px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.tool{padding:13px}.brand span{font-size:16px!important}}@media(max-width:370px){.grid{grid-template-columns:1fr}}
+/* Editor-first compact layout */
+#themeBtn[hidden]{display:none!important}
+#toolDesc,#toolCat{display:none!important}
+body:has(#workspace:not(.hidden)) #tools{display:none}
+body:has(#workspace:not(.hidden)) .workspace{margin-top:18px;max-width:1380px}
+.wshead{align-items:center;padding:14px 20px}
+.wshead h2{font-size:20px;margin:0}
+#closeWs{font-size:18px;min-width:38px;min-height:38px}
+.drop{min-height:140px;margin:16px;padding:16px}
+.uploadIcon{font-size:25px}
+.drop h3{font-size:17px;margin:3px 0}
+.drop p{font-size:12px;margin:5px 0 13px}
+.controls{padding:12px 18px;gap:9px}
+.editor{padding:12px}
+.vbar{align-items:center;gap:6px}
+.vbar button,.vbar input,.vbar select{padding:8px 10px}
+.actionbar{position:sticky;bottom:0;z-index:15;background:#fff;padding:12px 18px;box-shadow:0 -3px 12px #1422370a}
+.stagewrap{max-height:calc(100vh - 250px);min-height:330px}
+.thumbs{max-height:calc(100vh - 250px)}
+@media(max-width:560px){body:has(#workspace:not(.hidden)) .workspace{margin:8px 5px 24px}.wshead{padding:12px}.wshead h2{font-size:17px}.controls{padding:10px}.editor{padding:8px}.actionbar{padding:10px}.stagewrap{min-height:240px;max-height:65vh}.thumbs{max-height:65vh}}
