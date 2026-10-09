@@ -56,6 +56,10 @@ jobs:
 
       - name: Run upstream tests before local privacy modifications
         working-directory: vendor/bentopdf
+        env:
+          VITE_WASM_PYMUPDF_URL: ""
+          VITE_WASM_GS_URL: ""
+          VITE_WASM_CPDF_URL: ""
         run: npm run test:run
 
       - name: Package PDF engines + Vietnamese/English OCR locally
