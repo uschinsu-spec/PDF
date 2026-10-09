@@ -106,6 +106,21 @@ patch(provider,
   'if (!host || host !== location.hostname) {\n      throw new Error(\'Only same-origin WASM assets are permitted\');'
 );
 
+// Explicitly prevent the service worker from fetching third-party URLs as well.
+const sw = path.join(pub, 'sw.js');
+patch(sw,
+  "const trustedCdnOrigins = new Set(['https://cdn.jsdelivr.net']);",
+  "const trustedCdnOrigins = new Set();"
+);
+patch(sw,
+  "  if (!isLocal && !isCDN) {\n    return;\n  }",
+  "  if (!isLocal) {\n    event.respondWith(Response.error()); // Block outbound requests from controlled clients\n    return;\n  }"
+);
+patch(sw,
+  'trustedCdnOrigins.add(parsed.origin);',
+  "if (parsed.origin === self.location.origin) trustedCdnOrigins.add(parsed.origin);"
+);
+
 // Make the previously built-in CDN fallbacks point to the owner's static website.
 const replacements = new Map([
   ['https://cdn.jsdelivr.net/npm/@bentopdf/pymupdf-wasm@0.11.16/', normalizedBase + 'wasm/pymupdf/'],
