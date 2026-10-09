@@ -29,6 +29,7 @@ set VITE_TESSERACT_WORKER_URL=/PDF/ocr/worker.min.js
 set VITE_TESSERACT_CORE_URL=/PDF/ocr/core
 set VITE_TESSERACT_LANG_URL=/PDF/ocr/lang
 set VITE_TESSERACT_AVAILABLE_LANGUAGES=eng,vie
+set VITE_OCR_FONT_BASE_URL=/PDF/ocr/fonts
 set VITE_CORS_PROXY_URL=
 node scripts\prepare-private-bento.mjs || (echo LOI: tai thu vien OCR/WASM & pause & exit /b 1)
 pushd vendor\bentopdf
