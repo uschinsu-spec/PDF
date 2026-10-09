@@ -53,12 +53,12 @@ jobs:
         working-directory: vendor/bentopdf
         run: npm ci --no-audit --no-fund
 
-      - name: Package PDF engines + Vietnamese/English OCR locally
-        run: node scripts/prepare-private-bento.mjs
-
-      - name: Run upstream tests
+      - name: Run upstream tests before local privacy modifications
         working-directory: vendor/bentopdf
         run: npm run test:run
+
+      - name: Package PDF engines + Vietnamese/English OCR locally
+        run: node scripts/prepare-private-bento.mjs
 
       - name: Build all PDF tools for this GitHub Pages path
         working-directory: vendor/bentopdf
