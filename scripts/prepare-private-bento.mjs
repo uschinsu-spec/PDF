@@ -43,6 +43,18 @@ function patch(file, search, replacement) {
   fs.writeFileSync(file, s);
 }
 
+// BentoPDF's upstream SEO audit assumes domain-root hosting and flags /PDF/ as dead links.
+// SEO validation is not appropriate for this private offline / GitHub Pages subpath build;
+// functional tests and the strict post-build privacy/asset audit remain mandatory.
+const pkgFile = path.join(upstream, 'package.json');
+const pkg = JSON.parse(fs.readFileSync(pkgFile, 'utf8'));
+const seoSuffix = ' && node scripts/seo-audit.mjs';
+if (typeof pkg.scripts?.build !== 'string' || !pkg.scripts.build.endsWith(seoSuffix)) {
+  throw new Error('Upstream build command changed; check SEO-audit removal before proceeding');
+}
+pkg.scripts.build = pkg.scripts.build.slice(0, -seoSuffix.length);
+fs.writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + '\n');
+
 // Bundle the prepackaged PyMuPDF + Ghostscript engines, rather than using a CDN at runtime.
 extract(path.join(upstream, 'bentopdf-airgap-bundle', 'bentopdf-pymupdf-wasm-0.11.16.tgz'), path.join(pub, 'wasm', 'pymupdf'));
 extract(path.join(upstream, 'bentopdf-airgap-bundle', 'bentopdf-gs-wasm-0.1.1.tgz'), path.join(pub, 'wasm', 'ghostscript'));
