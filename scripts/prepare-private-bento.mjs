@@ -81,6 +81,20 @@ for (const code of ['vie','eng']) {
   fs.writeFileSync(target, gzipSync(buf));
 }
 
+// Embed Noto Sans for OCR text layers (Vietnamese + English) to avoid CDN font requests.
+const fonts = path.join(ocr, 'fonts');
+fs.mkdirSync(fonts, { recursive: true });
+const noto = path.join(fonts, 'NotoSans-Regular.ttf');
+if (!fs.existsSync(noto) || fs.statSync(noto).size < 100000) {
+  const url = 'https://raw.githubusercontent.com/googlefonts/noto-fonts/ffebf8c1ee449e544955a7e813c54f9b73848eac/hinted/ttf/NotoSans/NotoSans-Regular.ttf';
+  console.log('[setup] Downloading Noto Sans during BUILD only...');
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Noto Sans download failed: HTTP ' + response.status);
+  const buf = Buffer.from(await response.arrayBuffer());
+  if (buf.length < 100000) throw new Error('Noto Sans font suspiciously small');
+  fs.writeFileSync(noto, buf);
+}
+
 // Refuse user-configured remote WASM overrides, including stale localStorage values.
 const provider = path.join(upstream, 'src', 'js', 'utils', 'wasm-provider.ts');
 patch(provider,
