@@ -706,6 +706,7 @@ export default defineConfig(() => {
             'src/pages/compress-pdf-for-email.html'
           ),
           'edit-pdf': resolve(__dirname, 'src/pages/edit-pdf.html'),
+          'region-editor': resolve(__dirname, 'src/pages/region-editor.html'),
           'edit-pdf-text': resolve(__dirname, 'src/pages/edit-pdf-text.html'),
           'jpg-to-pdf': resolve(__dirname, 'src/pages/jpg-to-pdf.html'),
           'sign-pdf': resolve(__dirname, 'src/pages/sign-pdf.html'),
