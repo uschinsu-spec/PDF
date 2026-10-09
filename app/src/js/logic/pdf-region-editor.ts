@@ -8,6 +8,11 @@ type Cover = {page:number;box:Box};
 const el = (id:string) => document.getElementById(id)!;
 const canvas=el('canvas') as HTMLCanvasElement;
 const ctx=canvas.getContext('2d')!;
+const ZOOM_MIN=0.25,ZOOM_MAX=4;
+let zoom=1;
+function applyZoom(){canvas.style.width=(canvas.width*zoom)+'px';canvas.style.height=(canvas.height*zoom)+'px';el('zoom-label').textContent=Math.round(zoom*100)+'%';(el('zoom-out') as HTMLButtonElement).disabled=zoom<=ZOOM_MIN;(el('zoom-in') as HTMLButtonElement).disabled=zoom>=ZOOM_MAX}
+function setZoom(next:number){zoom=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,Math.round(next*100)/100));applyZoom()}
+
 let raw:Uint8Array|null=null;
 let pdf:pdfjs.PDFDocumentProxy|null=null;
 let page=0, selecting=false, dragging=false, start={x:0,y:0}, selection:Box|null=null;
@@ -57,7 +62,7 @@ async function render(){
  canvas.width=Math.round(viewport.width);canvas.height=Math.round(viewport.height);
  const off=document.createElement('canvas');off.width=canvas.width;off.height=canvas.height;
  await pg.render({canvas:off,canvasContext:off.getContext('2d')!,viewport}).promise;
- base=off;selection=null;active=null;el('page').textContent='Trang '+(page+1)+'/'+pdf.numPages;
+ base=off;selection=null;active=null;applyZoom();el('page').textContent='Trang '+(page+1)+'/'+pdf.numPages;
  (el('prev') as HTMLButtonElement).disabled=page===0;(el('next') as HTMLButtonElement).disabled=page===pdf.numPages-1;await draw();
 }
 el('file').addEventListener('change',async()=>{const f=(el('file') as HTMLInputElement).files?.[0];if(!f)return;try{raw=new Uint8Array(await f.arrayBuffer());pdf=await pdfjs.getDocument({data:raw.slice()}).promise;page=0;stamps=[];covers=[];clip=null;active=null;undoStack.length=0;await render();say('Đã mở '+f.name)}catch(e){say('Không thể đọc PDF: '+String(e))}});
@@ -111,6 +116,9 @@ el('insert-blank').onclick=()=>void changePages('blank');
 el('insert-pdf').onclick=()=>{if(!pdf){say('Hãy mở PDF trước.');return}(el('insert-file') as HTMLInputElement).click()};
 el('insert-file').addEventListener('change',()=>{const input=el('insert-file') as HTMLInputElement;const file=input.files?.[0];input.value='';if(file)void changePages('insert',file)});
 
+el('zoom-in').onclick=()=>setZoom(zoom+0.25);
+el('zoom-out').onclick=()=>setZoom(zoom-0.25);
+el('zoom-fit').onclick=()=>{const sheet=canvas.closest('.sheet') as HTMLElement|null;if(!sheet||!canvas.width)return;const available=Math.max(1,sheet.clientWidth-40);setZoom(Math.min(1,available/canvas.width))};
 el('prev').onclick=()=>{if(page>0){page--;void render()}};
 el('next').onclick=()=>{if(pdf&&page<pdf.numPages-1){page++;void render()}};
 el('select').onclick=()=>{active=null;selection=null;void draw();say('Kéo chuột để chọn vùng')};
