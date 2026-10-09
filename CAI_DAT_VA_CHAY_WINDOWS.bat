@@ -5,7 +5,7 @@ cd /d "%~dp0"
 echo ==============================================
 echo PDF made by Nghia - CAI DAT RIENG TU
 echo Ma nguon PDF da nam hoan toan trong GitHub cua ban.
-echo Khong tai file PDF cua ban len BentoPDF.
+echo File PDF duoc xu ly tren thiet bi, khong gui den nha cung cap ma nguon.
 echo ==============================================
 where git >nul 2>&1 || (echo CAN CAI GIT: https://git-scm.com/downloads & pause & exit /b 1)
 where node >nul 2>&1 || (echo CAN CAI NODE.JS 22: https://nodejs.org/ & pause & exit /b 1)

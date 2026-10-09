@@ -1,4 +1,4 @@
-name: Private BentoPDF - build and deploy
+name: Personal PDF - build and deploy
 on:
   pull_request:
     branches: [main]
@@ -38,10 +38,9 @@ jobs:
       VITE_OCR_FONT_BASE_URL: /PDF/ocr/fonts
       VITE_CORS_PROXY_URL: ""
     steps:
-      - name: Checkout PDF repo with pinned BentoPDF source
+      - name: Checkout all PDF sources from this repository
         uses: actions/checkout@v4
         with:
-          submodules: recursive
           persist-credentials: false
 
       - name: Setup Node 22
@@ -49,14 +48,14 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: vendor/bentopdf/package-lock.json
+          cache-dependency-path: app/package-lock.json
 
-      - name: Install BentoPDF build dependencies
-        working-directory: vendor/bentopdf
+      - name: Install local PDF build dependencies
+        working-directory: app
         run: npm ci --no-audit --no-fund
 
-      - name: Run upstream tests before local privacy modifications
-        working-directory: vendor/bentopdf
+      - name: Run application tests before local privacy modifications
+        working-directory: app
         env:
           VITE_WASM_PYMUPDF_URL: ""
           VITE_WASM_GS_URL: ""
@@ -67,20 +66,20 @@ jobs:
         run: node scripts/prepare-private-bento.mjs
 
       - name: Build all PDF tools for this GitHub Pages path
-        working-directory: vendor/bentopdf
+        working-directory: app
         run: npm run build
 
       - name: Enforce same-origin policy and verify compiled assets
         run: node scripts/secure-private-build.mjs
 
       - name: Report output size
-        run: du -sh vendor/bentopdf/dist
+        run: du -sh app/dist
 
       - name: Publish private build artifact to GitHub Pages
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: vendor/bentopdf/dist
+          path: app/dist
 
   deploy:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
