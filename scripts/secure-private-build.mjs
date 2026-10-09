@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const upstream = path.resolve(import.meta.dirname, '..', 'vendor', 'bentopdf');
+const upstream = path.resolve(import.meta.dirname, '..', 'app');
 const dist = path.join(upstream, 'dist');
 const required = [
   'index.html',

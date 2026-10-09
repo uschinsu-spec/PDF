@@ -4,14 +4,13 @@ chcp 65001 >nul
 cd /d "%~dp0"
 echo ==============================================
 echo PDF made by Nghia - CAI DAT RIENG TU
-echo Ma nguon BentoPDF duoc lay tu Git submodule.
+echo Ma nguon PDF da nam hoan toan trong GitHub cua ban.
 echo Khong tai file PDF cua ban len BentoPDF.
 echo ==============================================
 where git >nul 2>&1 || (echo CAN CAI GIT: https://git-scm.com/downloads & pause & exit /b 1)
 where node >nul 2>&1 || (echo CAN CAI NODE.JS 22: https://nodejs.org/ & pause & exit /b 1)
 where npm >nul 2>&1 || (echo Khong tim thay npm & pause & exit /b 1)
-git submodule update --init --recursive || (echo LOI: git submodule & pause & exit /b 1)
-pushd vendor\bentopdf
+pushd app
 call npm ci --no-audit --no-fund || (popd & echo LOI: npm ci & pause & exit /b 1)
 popd
 set HUSKY=0
@@ -33,7 +32,7 @@ set VITE_TESSERACT_AVAILABLE_LANGUAGES=eng,vie
 set VITE_OCR_FONT_BASE_URL=/PDF/ocr/fonts
 set VITE_CORS_PROXY_URL=
 node scripts\prepare-private-bento.mjs || (echo LOI: tai thu vien OCR/WASM & pause & exit /b 1)
-pushd vendor\bentopdf
+pushd app
 call npm run build || (popd & echo LOI: build & pause & exit /b 1)
 popd
 node scripts\secure-private-build.mjs || (echo LOI: kiem tra bao mat & pause & exit /b 1)

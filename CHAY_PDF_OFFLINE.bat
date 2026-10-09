@@ -2,7 +2,7 @@
 setlocal
 cd /d "%~dp0"
 where node >nul 2>&1 || (echo Can cai Node.js 22: https://nodejs.org/ & pause & exit /b 1)
-if not exist "vendor\bentopdf\dist\index.html" (
+if not exist "app\dist\index.html" (
   echo Ban chua build PDF ca nhan.
   echo Hay chay CAI_DAT_VA_CHAY_WINDOWS.bat mot lan khi co internet.
   pause

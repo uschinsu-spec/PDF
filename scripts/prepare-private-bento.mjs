@@ -2,7 +2,7 @@
 /**
  * Prepare a private, same-origin BentoPDF build.
  * All downloads occur during build/setup, never while processing user PDFs.
- * Upstream stays in vendor/bentopdf as a pinned AGPL-3.0 Git submodule.
+ * Upstream stays in app as a pinned AGPL-3.0 Git submodule.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,11 +11,11 @@ import { spawnSync } from 'node:child_process';
 import { gzipSync } from 'node:zlib';
 
 const root = path.resolve(import.meta.dirname, '..');
-const upstream = path.join(root, 'vendor', 'bentopdf');
+const upstream = path.join(root, 'app');
 const pub = path.join(upstream, 'public');
 const base = process.env.BASE_URL || '/PDF/';
 const normalizedBase = '/' + base.replace(/^\/+|\/+$/g, '') + '/';
-const requireFile = p => { if (!fs.existsSync(p)) throw new Error('Missing ' + p + '. Did you run git submodule update --init and npm ci?'); };
+const requireFile = p => { if (!fs.existsSync(p)) throw new Error('Missing ' + p + '. Did you run npm ci in app?'); };
 requireFile(path.join(upstream, 'package.json'));
 requireFile(path.join(upstream, 'node_modules', 'tesseract.js', 'package.json'));
 

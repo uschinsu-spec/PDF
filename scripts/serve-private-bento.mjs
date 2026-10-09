@@ -4,7 +4,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const root = path.resolve(import.meta.dirname, '..', 'vendor', 'bentopdf', 'dist');
+const root = path.resolve(import.meta.dirname, '..', 'app', 'dist');
 if (!fs.existsSync(path.join(root, 'index.html'))) {
   console.error('Chua co ban build. Hay chay CAI_DAT_VA_CHAY_WINDOWS.bat truoc.');
   process.exit(1);
