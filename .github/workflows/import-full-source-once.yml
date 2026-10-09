@@ -49,7 +49,6 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           files = [
-              '.github/workflows/private-bentopdf.yml',
               'CAI_DAT_VA_CHAY_WINDOWS.bat',
               'CHAY_PDF_OFFLINE.bat',
               'scripts/prepare-private-bento.mjs',
@@ -97,8 +96,7 @@ jobs:
           and third-party open-source licenses continue to apply when distributing modified copies.
           """,encoding='utf-8')
           PY
-          git rm .github/workflows/import-full-source-once.yml
-          git add .github/workflows/private-bentopdf.yml CAI_DAT_VA_CHAY_WINDOWS.bat \
+          git add CAI_DAT_VA_CHAY_WINDOWS.bat \
             CHAY_PDF_OFFLINE.bat README.md scripts/
           if git ls-files --stage | grep -q '^160000 '; then echo 'Remaining gitlink'; exit 1; fi
           test ! -e .gitmodules
