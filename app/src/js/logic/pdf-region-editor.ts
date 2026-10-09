@@ -3,7 +3,7 @@ import { PDFDocument, degrees, rgb } from 'pdf-lib';
 import '../utils/setup-pdf-worker.js';
 
 type Box = { x:number;y:number;w:number;h:number };
-type Stamp = {id:number;page:number;data:string;x:number;y:number;w:number;h:number;opacity:number;rotation:number};
+type Stamp = {id:number;page:number;data:string;x:number;y:number;w:number;h:number;baseW:number;baseH:number;opacity:number;rotation:number};
 type Cover = {page:number;box:Box};
 const el = (id:string) => document.getElementById(id)!;
 const canvas=el('canvas') as HTMLCanvasElement;
@@ -48,13 +48,13 @@ canvas.addEventListener('pointermove',e=>{if(!selecting&&!dragging)return;const 
 canvas.addEventListener('pointerup',()=>{selecting=false;dragging=false;void draw()});
 canvas.addEventListener('pointercancel',()=>{selecting=false;dragging=false});
 function region(){if(!selection||selection.w<3||selection.h<3){say('Chọn vùng hình chữ nhật trước.');return null}const b=selection;return{x:clamp(Math.floor(b.x),0,canvas.width),y:clamp(Math.floor(b.y),0,canvas.height),w:clamp(Math.ceil(b.w),0,canvas.width-b.x),h:clamp(Math.ceil(b.h),0,canvas.height-b.y)}}
-async function copy(cut:boolean){const b=region();if(!b)return;const off=document.createElement('canvas');off.width=Math.max(1,Math.floor(b.w));off.height=Math.max(1,Math.floor(b.h));off.getContext('2d')!.drawImage(canvas,b.x,b.y,b.w,b.h,0,0,off.width,off.height);clip={data:off.toDataURL('image/png'),w:b.w,h:b.h};if(cut){snapshot();covers.push({page,box:b});selection=null;await draw()}say(cut?'Đã cắt vùng (phủ trắng nguồn).':'Đã sao chép vùng.');}
+async function copy(cut:boolean){const b=region();if(!b)return;const kept=selection;selection=null;await draw();const off=document.createElement('canvas');off.width=Math.max(1,Math.floor(b.w));off.height=Math.max(1,Math.floor(b.h));off.getContext('2d')!.drawImage(canvas,b.x,b.y,b.w,b.h,0,0,off.width,off.height);clip={data:off.toDataURL('image/png'),w:b.w,h:b.h};selection=kept;if(cut){snapshot();covers.push({page,box:b});selection=null;await draw()}say(cut?'Đã cắt vùng (phủ trắng nguồn).':'Đã sao chép vùng.');}
 el('copy').onclick=()=>void copy(false);el('cut').onclick=()=>void copy(true);
-el('paste').onclick=()=>{if(!clip||!pdf){say('Chưa có vùng sao chép.');return}snapshot();const s={id:++serial,page,data:clip.data,x:Math.max(0,(canvas.width-clip.w)/2),y:Math.max(0,(canvas.height-clip.h)/2),w:clip.w,h:clip.h,opacity:1,rotation:0};stamps.push(s);active=s.id;selection=null;sync();void draw();say('Đã dán vùng; kéo chuột để di chuyển.')};
+el('paste').onclick=()=>{if(!clip||!pdf){say('Chưa có vùng sao chép.');return}snapshot();const s={id:++serial,page,data:clip.data,x:Math.max(0,(canvas.width-clip.w)/2),y:Math.max(0,(canvas.height-clip.h)/2),w:clip.w,h:clip.h,baseW:clip.w,baseH:clip.h,opacity:1,rotation:0};stamps.push(s);active=s.id;selection=null;sync();void draw();say('Đã dán vùng; kéo chuột để di chuyển.')};
 el('remove').onclick=()=>{if(active===null)return;snapshot();stamps=stamps.filter(s=>s.id!==active);active=null;void draw()};
-function sync(){const s=getActive();if(!s)return;(el('opacity') as HTMLInputElement).value=String(Math.round(s.opacity*100));(el('size') as HTMLInputElement).value=String(Math.round(s.w/(clip?.w||s.w)*100));(el('rotation') as HTMLInputElement).value=String(s.rotation);labels()}
+function sync(){const s=getActive();if(!s)return;(el('opacity') as HTMLInputElement).value=String(Math.round(s.opacity*100));(el('size') as HTMLInputElement).value=String(Math.round(s.w/s.baseW*100));(el('rotation') as HTMLInputElement).value=String(s.rotation);labels()}
 function labels(){el('ov').textContent=(el('opacity') as HTMLInputElement).value+'%';el('sv').textContent=(el('size') as HTMLInputElement).value+'%';el('rv').textContent=(el('rotation') as HTMLInputElement).value+'°'}
-for(const id of ['opacity','size','rotation']){el(id).addEventListener('pointerdown',()=>{if(getActive())snapshot()});el(id).addEventListener('input',()=>{const s=getActive();if(!s)return;const v=Number((el(id) as HTMLInputElement).value);if(id==='opacity')s.opacity=v/100;if(id==='rotation')s.rotation=v;if(id==='size'){const aspect=s.h/s.w;const original=clip?.w||s.w;s.w=original*v/100;s.h=s.w*aspect}labels();void draw()})}
+for(const id of ['opacity','size','rotation']){el(id).addEventListener('pointerdown',()=>{if(getActive())snapshot()});el(id).addEventListener('input',()=>{const s=getActive();if(!s)return;const v=Number((el(id) as HTMLInputElement).value);if(id==='opacity')s.opacity=v/100;if(id==='rotation')s.rotation=v;if(id==='size'){s.w=s.baseW*v/100;s.h=s.baseH*v/100}labels();void draw()})}
 for(const [id,delta] of [['left',-90],['right',90]] as const)el(id).onclick=()=>{const s=getActive();if(!s)return;snapshot();s.rotation=((s.rotation+delta+180)%360+360)%360-180;sync();void draw()};
 el('undo').onclick=()=>{const last=undoStack.pop();if(!last)return;stamps=last.stamps;covers=last.covers;active=null;void draw()};
 document.addEventListener('keydown',e=>{if(e.target instanceof HTMLInputElement&&e.target.type==='range')return;if((e.ctrlKey||e.metaKey)&&['c','x','v','z'].includes(e.key.toLowerCase())){e.preventDefault();({c:()=>void copy(false),x:()=>void copy(true),v:()=>el('paste').click(),z:()=>el('undo').click()} as Record<string,()=>void>)[e.key.toLowerCase()]()}else if(e.key==='Delete')el('remove').click()});
