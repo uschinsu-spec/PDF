@@ -21,7 +21,7 @@ requireFile(path.join(upstream, 'node_modules', 'tesseract.js', 'package.json'))
 
 function run(bin, args, options = {}) {
   const command = process.platform === 'win32' && bin === 'npm' ? 'npm.cmd' : bin;
-  const r = spawnSync(command, args, { cwd: upstream, encoding: 'utf8', stdio: 'pipe', ...options });
+  const r = spawnSync(command, args, { cwd: upstream, encoding: 'utf8', stdio: 'pipe', shell: process.platform === 'win32' && bin === 'npm', ...options });
   if (r.status !== 0) throw new Error(command + ' ' + args.join(' ') + '\n' + (r.stderr || r.stdout));
   return r.stdout.trim();
 }
