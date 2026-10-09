@@ -68,7 +68,7 @@ requireFile(worker);
 fs.copyFileSync(worker, path.join(ocr, 'worker.min.js'));
 const core = path.join(upstream, 'node_modules', 'tesseract.js-core');
 requireFile(core);
-fs.cpSync(core, path.join(ocr, 'core'), { recursive: true, force: true, filter: (source) => !source.includes('node_modules') });
+fs.cpSync(core, path.join(ocr, 'core'), { recursive: true, force: true });
 for (const code of ['vie','eng']) {
   const target = path.join(ocr, 'lang', code + '.traineddata.gz');
   if (fs.existsSync(target) && fs.statSync(target).size > 100000) continue;
