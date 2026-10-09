@@ -34,6 +34,7 @@ jobs:
       VITE_TESSERACT_CORE_URL: /PDF/ocr/core
       VITE_TESSERACT_LANG_URL: /PDF/ocr/lang
       VITE_TESSERACT_AVAILABLE_LANGUAGES: eng,vie
+      VITE_OCR_FONT_BASE_URL: /PDF/ocr/fonts
       VITE_CORS_PROXY_URL: ""
     steps:
       - name: Checkout PDF repo with pinned BentoPDF source
