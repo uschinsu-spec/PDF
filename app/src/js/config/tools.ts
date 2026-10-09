@@ -4,6 +4,12 @@ const baseCategories = [
     name: 'Popular Tools',
     tools: [
       {
+        href: import.meta.env.BASE_URL + 'region-editor.html',
+        name: 'Cắt & Dán Vùng PDF',
+        icon: 'ph-selection',
+        subtitle: 'Chọn vùng, cắt, sao chép, dán; chỉnh độ mờ, kích thước và góc xoay.',
+      },
+      {
         href: import.meta.env.BASE_URL + 'edit-pdf-text.html',
         name: 'Edit PDF Text',
         icon: 'ph-cursor-text',
