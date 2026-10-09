@@ -5,6 +5,7 @@
 <body><header><a href="edit-pdf.html">← PDF Editor</a><h1>Cắt, sao chép và dán vùng PDF</h1><input id="file" type="file" accept="application/pdf"><button id="save" class="primary">Xuất PDF</button></header>
 <main><aside class="panel"><p class="muted">Kéo chuột lên trang để chọn vùng. Nhấn Sao chép hoặc Cắt, rồi Dán. Bấm vùng đã dán để di chuyển.</p><div class="actions"><button id="select">Chọn vùng</button><button id="copy">Sao chép</button><button id="cut">Cắt</button><button id="paste">Dán</button><button id="remove">Xóa vùng dán</button></div>
 <label for="opacity">Độ mờ: <output id="ov">100%</output></label><input id="opacity" type="range" min="0" max="100" value="100">
+<label for="strength">Độ đậm: <output id="dv">100%</output></label><input id="strength" type="range" min="100" max="300" value="100" step="5" title="Tăng độ đậm và tương phản của vùng dán">
 <label for="size">Kích thước: <output id="sv">100%</output></label><input id="size" type="range" min="10" max="400" value="100">
 <label for="rotation">Xoay: <output id="rv">0°</output></label><input id="rotation" type="range" min="-180" max="180" value="0">
 <div class="actions"><button id="left">↶ 90°</button><button id="right">↷ 90°</button><button id="undo">Hoàn tác</button></div>
