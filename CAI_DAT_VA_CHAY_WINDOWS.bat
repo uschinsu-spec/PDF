@@ -16,7 +16,7 @@ call npm ci --no-audit --no-fund || (popd & echo LOI: npm ci & pause & exit /b 1
 popd
 set HUSKY=0
 set BASE_URL=/PDF/
-set SITE_URL=http://127.0.0.1:8080/PDF
+set SITE_URL=http://127.0.0.1:8080
 set VITE_USE_CDN=false
 set VITE_DEFAULT_LANGUAGE=vi
 set VITE_BRAND_NAME=PDF made by Nghia
