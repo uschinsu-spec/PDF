@@ -4,6 +4,15 @@
 *{box-sizing:border-box}body{margin:0;background:#f3f5f8;color:#172033;font:14px system-ui,Arial}header{padding:14px 24px;background:#fff;border-bottom:1px solid #ddd;display:flex;gap:15px;align-items:center;flex-wrap:wrap}h1{font-size:18px;margin:0}button,input{font:inherit}button{padding:9px 12px;background:white;border:1px solid #cbd5e1;border-radius:8px;cursor:pointer}button:hover{background:#e8eefb}button:disabled{opacity:.4}button.primary{background:#2156d8;color:white}main{max-width:1300px;margin:20px auto;padding:0 14px;display:grid;grid-template-columns:245px minmax(0,1fr);gap:18px}.panel{background:white;padding:16px;border:1px solid #e1e5ef;border-radius:12px;align-self:start}.panel label{display:block;margin:12px 0 4px}.panel input[type=range]{width:100%}.actions{display:flex;flex-wrap:wrap;gap:7px}.sheet{background:#dce3ec;overflow:auto;min-height:70vh;text-align:center;padding:20px;border-radius:12px}canvas{display:block;margin:auto;max-width:100%;height:auto;box-shadow:0 2px 15px #888;background:white;touch-action:none;cursor:crosshair}.muted{color:#59687c;font-size:12px}#status{margin:10px 0;color:#334155}nav{display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:12px}@media(max-width:700px){main{grid-template-columns:1fr}.sheet{min-height:50vh}}</style></head>
 <body><header><a href="edit-pdf.html">← PDF Editor</a><h1>Cắt, sao chép và dán vùng PDF</h1><input id="file" type="file" accept="application/pdf"><button id="save" class="primary">Xuất PDF</button></header>
 <main><aside class="panel"><p class="muted">Kéo chuột lên trang để chọn vùng. Nhấn Sao chép hoặc Cắt, rồi Dán. Bấm vùng đã dán để di chuyển.</p><div class="actions"><button id="select">Chọn vùng</button><button id="copy">Sao chép</button><button id="cut">Cắt</button><button id="paste">Dán</button><button id="remove">Xóa vùng dán</button></div>
+<hr style="border:0;border-top:1px solid #e2e8f0;margin:17px 0">
+<strong>Quản lý trang PDF</strong>
+<p class="muted">Thao tác ngay trên trang đang xem. Trang mới được chèn sau trang hiện tại.</p>
+<div class="actions">
+  <button id="insert-blank" type="button">＋ Trang trắng</button>
+  <button id="insert-pdf" type="button">＋ Từ PDF khác</button>
+  <button id="delete-page" type="button" title="Xóa trang PDF đang xem">🗑 Xóa trang</button>
+</div>
+<input id="insert-file" type="file" accept="application/pdf,.pdf" hidden>
 <label for="opacity">Độ mờ: <output id="ov">100%</output></label><input id="opacity" type="range" min="0" max="100" value="100">
 <label for="strength">Độ đậm: <output id="dv">100%</output></label><input id="strength" type="range" min="100" max="300" value="100" step="5" title="Tăng độ đậm và tương phản của vùng dán">
 <label for="size">Kích thước: <output id="sv">100%</output></label><input id="size" type="range" min="10" max="400" value="100">
