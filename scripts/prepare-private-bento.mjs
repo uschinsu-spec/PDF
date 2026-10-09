@@ -141,3 +141,14 @@ const replacements = new Map([
 ]);
 for (const [from, to] of replacements) patch(provider, from, to);
 console.log('[setup] Private WASM, OCR and same-origin safeguards ready: ' + normalizedBase);
+
+// Apply a private, white theme to the pinned BentoPDF source at build time.
+const themeSource = path.join(root, 'customization', 'bento-light.css');
+requireFile(themeSource);
+const themeMarker = '/* PRIVATE_PDF_LIGHT_THEME_START */';
+const cssTarget = path.join(upstream, 'src', 'css', 'styles.css');
+const upstreamCss = fs.readFileSync(cssTarget, 'utf8');
+const existingMarkerAt = upstreamCss.indexOf(themeMarker);
+const cssBase = existingMarkerAt === -1 ? upstreamCss : upstreamCss.slice(0, existingMarkerAt);
+fs.writeFileSync(cssTarget, cssBase.trimEnd() + String.fromCharCode(10, 10) + themeMarker + String.fromCharCode(10) + fs.readFileSync(themeSource, 'utf8'));
+console.log('[setup] BentoPDF Simple Mode + personalized light theme enabled');

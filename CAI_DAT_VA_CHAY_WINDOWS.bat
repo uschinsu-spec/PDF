@@ -18,6 +18,7 @@ set HUSKY=0
 set BASE_URL=/PDF/
 set SITE_URL=http://127.0.0.1:8080
 set VITE_USE_CDN=false
+set SIMPLE_MODE=true
 set VITE_DEFAULT_LANGUAGE=vi
 set VITE_BRAND_NAME=PDF made by Nghia
 set VITE_FOOTER_TEXT=PDF ca nhan - xu ly tai trinh duyet

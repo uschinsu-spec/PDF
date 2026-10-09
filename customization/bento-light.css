@@ -1,0 +1,39 @@
+/* BentoPDF personal light theme - retains all PDF tools and editing features. */
+:root {color-scheme:light}
+html,body{background:#fff!important;color:#232b36!important}
+nav[data-simple-nav]{background:#fff!important;border-color:#e9edf3!important;box-shadow:0 1px 8px #18223508}
+nav[data-simple-nav] .text-white,nav[data-simple-nav] a{color:#202936!important}
+#app{max-width:1440px!important}
+#tools-header{padding-top:1rem!important;margin-bottom:1.5rem!important}
+#tools-header h1{font-size:clamp(1.55rem,2.6vw,2.1rem)!important;color:#1f2937!important;letter-spacing:-.03em}
+#tools-header p{display:none!important}
+#grid-view > .mb-8{margin-bottom:1.35rem!important}
+#search-bar{background:#fff!important;color:#1f2937!important;border:1px solid #dde4ee!important;box-shadow:0 2px 12px #17213509}
+#search-bar:focus{outline:2px solid #dbeafe!important;border-color:#93b4f8!important}
+#shortcut{background:#f8fafc!important;color:#596579!important;border-color:#e3e8ee!important;box-shadow:none!important}
+.category-header{color:#273244!important;font-size:1.12rem!important;margin-top:1.5rem!important}
+.category-header:hover{color:#245baf!important}
+.category-group .category-tools{gap:12px!important}
+.tool-card,.compact-mode .tool-card{background:#fff!important;color:#1f2937!important;border:1px solid #e6eaf0!important;border-radius:12px!important;padding:16px!important;box-shadow:none!important}
+.tool-card:hover,.compact-mode .tool-card:hover{background:#f9fbff!important;border-color:#bed1ed!important;transform:none!important;box-shadow:0 3px 12px #1721350a!important}
+.tool-card h3,.tool-card .text-white{color:#283449!important;font-size:.94rem}
+.tool-card p{color:#6b7686!important;font-size:.8rem}
+#tool-interface{max-width:1200px!important;background:#fff!important;border-color:#e6eaf0!important;box-shadow:0 4px 20px #1721350a!important;padding:clamp(12px,2.2vw,26px)!important}
+#tool-interface .bg-gray-800,#tool-interface .bg-gray-900{background:#fff!important}
+#tool-interface .bg-gray-700,#tool-interface .bg-gray-600{background:#f5f7fa!important}
+#tool-interface :is(h1,h2,h3,h4,p,label):not([class*="text-indigo"]):not([class*="text-red"]):not([class*="text-green"]){color:#273244}
+#tool-interface :is(input,select,textarea){border-color:#dce3eb}
+#back-to-grid{color:#295dab!important;margin-bottom:16px!important}
+#loader-modal >div,#alert-modal >div{background:#fff!important;border-color:#e6eaf0!important}
+#loader-modal #loader-text,#alert-modal #alert-title{color:#1f2937!important}
+#alert-modal #alert-message{color:#667085!important}
+footer[data-simple-footer]{margin:0!important;padding:0!important;border:0!important;height:0!important}
+footer[data-simple-footer] .container>div>div:first-child{display:none!important}
+footer[data-simple-footer] .container{position:fixed;z-index:32;top:12px;right:16px;width:auto!important;padding:0!important}
+footer[data-simple-footer] .container>div{justify-content:flex-end!important}
+body .bg-gray-800:not(nav):not(.tool-card),body .bg-gray-900{background-color:#fff!important}
+body .bg-gray-700:not(button),body .bg-gray-600:not(button){background-color:#f6f8fb!important}
+body .border-gray-700,body .border-gray-600{border-color:#e4e9f0!important}
+body :is(.text-white,.text-gray-100,.text-gray-200):not(button):not(.btn):not([class*="bg-indigo"]):not([class*="bg-blue"]):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-black"]){color:#263244}
+body .text-gray-300,body .text-gray-400{color:#64748b!important}
+@media(max-width:640px){#app{padding:12px!important}#tools-header{padding-top:10px!important;margin-bottom:15px!important}.category-group .category-tools{gap:9px!important}.tool-card{padding:12px!important}#tool-interface{border-radius:10px!important}footer[data-simple-footer] .container{top:11px;right:8px}}
