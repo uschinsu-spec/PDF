@@ -21,7 +21,7 @@ jobs:
       HUSKY: "0"
       NODE_OPTIONS: --max-old-space-size=4096
       BASE_URL: /PDF/
-      SITE_URL: https://uschinsu-spec.github.io/PDF
+      SITE_URL: https://uschinsu-spec.github.io
       VITE_USE_CDN: "false"
       VITE_DEFAULT_LANGUAGE: vi
       VITE_BRAND_NAME: PDF made by Nghĩa
