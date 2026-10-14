@@ -3520,6 +3520,7 @@ function restore(from, to) {
 const docFonts = new Map();
 const docFontsReady = new Map();
 const docFontsNull = new Set();
+const docFontBytes = new Map();
 let docFontSeq = 0;
 let inPreviewPass = false;
 
@@ -3527,6 +3528,24 @@ if (typeof document !== 'undefined' && document.fonts?.addEventListener) {
   document.fonts.addEventListener('loadingdone', () => {
     lockedEpoch++;
   });
+}
+
+function fontCoversText(bytes, text) {
+  if (!bytes?.length) return false;
+  const cps = [
+    ...new Set(
+      Array.from(text || '')
+        .filter(
+          (ch) =>
+            !/\s/u.test(ch) &&
+            ch !== '\u200B' &&
+            ch !== '\u2060' &&
+            ch !== '\u00AD'
+        )
+        .map((ch) => ch.codePointAt(0))
+    ),
+  ];
+  return cps.length === 0 || sfntCovers(bytes, cps);
 }
 
 function isLoadableSfnt(bytes) {
@@ -3554,25 +3573,13 @@ async function ensureRunFont(para, runIndex, run) {
       // Browsers then render tofu squares even though the PDF canvas is fine.
       // Only apply an embedded font when it covers every visible character;
       // otherwise keep WEB_FALLBACK's normal browser font stack.
-      const cps = [
-        ...new Set(
-          Array.from(run.text || '')
-            .filter(
-              (ch) =>
-                !/\s/u.test(ch) &&
-                ch !== '\u200B' &&
-                ch !== '\u2060' &&
-                ch !== '\u00AD'
-            )
-            .map((ch) => ch.codePointAt(0))
-        ),
-      ];
-      if (cps.length && !sfntCovers(bytes, cps)) return null;
+      if (!fontCoversText(bytes, run.text)) return null;
 
       const cssFamily = 'ecdoc' + docFontSeq++;
       const face = new FontFace(cssFamily, bytes.buffer);
       await face.load();
       document.fonts.add(face);
+      docFontBytes.set(cssFamily, bytes);
       return cssFamily;
     };
     try {
@@ -4076,6 +4083,9 @@ function openEditor(spec, caret) {
     if (!state.editing) return;
     unpristine();
     const es = state.editing;
+    // Recheck the live text, not only the original PDF run: newly typed digits
+    // or Vietnamese characters may be absent from a subset-embedded PDF font.
+    ed.querySelectorAll('span[data-src]').forEach(applySpanStyle);
     if (es.locked) {
       schedulePreview();
       return;
@@ -5642,13 +5652,15 @@ function applySpanStyle(s) {
   const size = parseFloat(s.dataset.size);
   const script = parseInt(s.dataset.script) || 0;
   const vis = script !== 0 ? size * 0.58 : size;
+  const embeddedBytes = docFontBytes.get(s.dataset.docfont);
   const useDoc =
     s.dataset.docfont &&
     s.dataset.docfontFor === s.dataset.family &&
     (s.dataset.docfontB ?? '0') ===
       (s.dataset.bold === '2' ? '2' : s.dataset.bold === '1' ? '1' : '0') &&
     (s.dataset.docfontI ?? '0') ===
-      (s.dataset.italic === '2' ? '2' : s.dataset.italic === '1' ? '1' : '0');
+      (s.dataset.italic === '2' ? '2' : s.dataset.italic === '1' ? '1' : '0') &&
+    fontCoversText(embeddedBytes, s.textContent);
   s.style.fontFamily = useDoc
     ? `"${s.dataset.docfont}", ${WEB_FALLBACK(s.dataset.family, s.dataset.fallback)}`
     : WEB_FALLBACK(s.dataset.family, s.dataset.fallback);
