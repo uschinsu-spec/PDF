@@ -13,7 +13,7 @@ window.addEventListener('unhandledrejection', (e) => {
     'UNHANDLED: ' +
     ((e.reason && (e.reason.stack || e.reason.message)) || e.reason);
 });
-import { PdfEngine, OBJ } from './core.js';
+import { PdfEngine, OBJ, sfntCovers } from './core.js';
 import { applyTagSurgery } from './tagsurgery.js';
 import { pageHasPatternFill, protectPatternArtwork } from './shadingsurgery.js';
 import {
@@ -3549,6 +3549,26 @@ async function ensureRunFont(para, runIndex, run) {
   if (hit) return hit.promise;
   const promise = (async () => {
     const load = async (bytes) => {
+      // A PDF font may be valid SFNT data but have no Unicode cmap for the
+      // text being edited (common with subset/legacy-encoded PDF fonts).
+      // Browsers then render tofu squares even though the PDF canvas is fine.
+      // Only apply an embedded font when it covers every visible character;
+      // otherwise keep WEB_FALLBACK's normal browser font stack.
+      const cps = [
+        ...new Set(
+          Array.from(run.text || '')
+            .filter(
+              (ch) =>
+                !/\s/u.test(ch) &&
+                ch !== '\u200B' &&
+                ch !== '\u2060' &&
+                ch !== '\u00AD'
+            )
+            .map((ch) => ch.codePointAt(0))
+        ),
+      ];
+      if (cps.length && !sfntCovers(bytes, cps)) return null;
+
       const cssFamily = 'ecdoc' + docFontSeq++;
       const face = new FontFace(cssFamily, bytes.buffer);
       await face.load();
@@ -3558,7 +3578,8 @@ async function ensureRunFont(para, runIndex, run) {
     try {
       const synth = P().synthRunFont(para.id, runIndex);
       if (synth === 'dishonest') return null;
-      if (synth) return await load(synth);
+      if (synth) {
+        const family = await load(synth);\n        if (family) return family;\n      }
     } catch {}
     const bytes = P().runFontData(para.id, runIndex);
     try {
