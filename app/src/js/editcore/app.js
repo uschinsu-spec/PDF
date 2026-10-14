@@ -3586,7 +3586,9 @@ async function ensureRunFont(para, runIndex, run) {
       const synth = P().synthRunFont(para.id, runIndex);
       if (synth === 'dishonest') return null;
       if (synth) {
-        const family = await load(synth);\n        if (family) return family;\n      }
+        const family = await load(synth);
+        if (family) return family;
+      }
     } catch {}
     const bytes = P().runFontData(para.id, runIndex);
     try {
