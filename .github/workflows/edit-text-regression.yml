@@ -40,5 +40,7 @@ jobs:
         run: npm ci
       - name: Run Edit Text regression tests
         run: npm run test:run -- src/tests/editcore-smoke.test.ts
-      - name: Build application
-        run: npm run build
+      - name: Type-check application
+        run: npx tsc
+      - name: Build production bundle
+        run: npm run build:docker
