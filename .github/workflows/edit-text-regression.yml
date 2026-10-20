@@ -1,0 +1,46 @@
+name: Edit Text regression
+
+on:
+  pull_request:
+    paths:
+      - 'app/src/js/editcore/**'
+      - 'app/src/tests/editcore-smoke.test.ts'
+      - 'app/src/js/utils/freetext-script.ts'
+      - 'app/package.json'
+      - 'app/package-lock.json'
+      - '.github/workflows/edit-text-regression.yml'
+  push:
+    branches: [main, fix/vietnamese-edit-text-roundtrip]
+    paths:
+      - 'app/src/js/editcore/**'
+      - 'app/src/tests/editcore-smoke.test.ts'
+      - 'app/src/js/utils/freetext-script.ts'
+      - 'app/package.json'
+      - 'app/package-lock.json'
+      - '.github/workflows/edit-text-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  edit-text:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Edit Text regression tests
+        run: npm run test:run -- src/tests/editcore-smoke.test.ts
+      - name: Type-check application
+        run: npx tsc
+      - name: Build production bundle
+        run: npm run build:docker

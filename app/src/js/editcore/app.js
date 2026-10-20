@@ -14,6 +14,7 @@ window.addEventListener('unhandledrejection', (e) => {
     ((e.reason && (e.reason.stack || e.reason.message)) || e.reason);
 });
 import { PdfEngine, OBJ, sfntCovers } from './core.js';
+import { needsFontEmbedding } from '../utils/freetext-script';
 import { applyTagSurgery } from './tagsurgery.js';
 import { pageHasPatternFill, protectPatternArtwork } from './shadingsurgery.js';
 import {
@@ -9368,6 +9369,36 @@ async function openFile(file, sourceUrl = null, knownBytes) {
 }
 
 async function saveFile() {
+  const editing = state.editing;
+  if (editing) {
+    const pendingRuns = parseEditor(
+      editing.editable,
+      editing.para?.runs || []
+    );
+    const pendingText = pendingRuns.map((run) => run.text || '').join('');
+    const needsUnicodeFont = pendingRuns.some((run) => {
+      if (!Array.from(run.text || '').some((ch) => needsFontEmbedding(ch)))
+        return false;
+      if (!editing.para || !Number.isInteger(run.sourceIndex)) return true;
+      try {
+        const embedded = P().runFontData(editing.para.id, run.sourceIndex);
+        return !fontCoversText(embedded, run.text);
+      } catch {
+        return true;
+      }
+    });
+    if (needsUnicodeFont) {
+      if (!localFontMeta.size && window.queryLocalFonts)
+        await loadSystemFonts(true);
+      const fallbackReady = await preloadVietnameseFallbackFont(pendingText);
+      if (!fallbackReady) {
+        toast(
+          'Không thể lưu an toàn ký tự Unicode mới: hãy cấp quyền truy cập font hệ thống trong Chrome/Edge hoặc chọn font có hỗ trợ tiếng Việt trước khi lưu.'
+        );
+        return;
+      }
+    }
+  }
   endEdit(true);
   const incremental = (state.docInfo?.signatures || 0) > 0;
   let bytes = await P().saveSpliced(
@@ -10179,6 +10210,7 @@ async function loadSystemFonts(silent = false) {
       }
     }
     preloadScriptFonts();
+    await preloadVietnameseFallbackFont();
     const sel = $('fFamily');
     const cur = sel.value;
     const fams = [...localFontMeta.keys()].sort();
@@ -10247,6 +10279,54 @@ const SCRIPT_FONT_CANDIDATES = [
 function preloadScriptFonts() {
   for (const fam of SCRIPT_FONT_CANDIDATES)
     if (localFontMeta.has(fam)) ensureLocalFontBytes(fam);
+}
+
+const VIETNAMESE_FALLBACK_CANDIDATES = [
+  'Arial',
+  'Arial Unicode MS',
+  'Tahoma',
+  'Segoe UI',
+  'Calibri',
+  'Times New Roman',
+  'Verdana',
+  'Liberation Sans',
+  'Noto Sans',
+  'Lato',
+];
+const VIETNAMESE_COVERAGE_SAMPLE = Array.from(
+  'Tiếng Việt có dấu: ă â ê ô ơ ư đ ắ ằ ặ ễ ệ ộ ợ ứ ừ ự'
+)
+  .filter((ch) => needsFontEmbedding(ch))
+  .map((ch) => ch.codePointAt(0));
+
+async function preloadVietnameseFallbackFont(text) {
+  const cps =
+    text == null
+      ? VIETNAMESE_COVERAGE_SAMPLE
+      : [
+          ...new Set(
+            Array.from(text)
+              .filter((ch) => needsFontEmbedding(ch))
+              .map((ch) => ch.codePointAt(0))
+          ),
+        ];
+  if (!cps.length) return true;
+
+  for (const bytes of PdfEngine.fallbackFonts.values()) {
+    if (sfntCovers(bytes, cps)) return true;
+  }
+
+  for (const family of VIETNAMESE_FALLBACK_CANDIDATES) {
+    if (!localFontMeta.has(family)) continue;
+    await ensureLocalFontBytes(family);
+    for (const [key, bytes] of PdfEngine.localFonts) {
+      if (key !== family && !key.startsWith(family + '|')) continue;
+      if (!sfntCovers(bytes, cps)) continue;
+      PdfEngine.fallbackFonts.set(key, bytes);
+      return true;
+    }
+  }
+  return false;
 }
 
 async function addImageFromFile(file) {
