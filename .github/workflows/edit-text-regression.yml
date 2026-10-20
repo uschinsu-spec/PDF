@@ -10,7 +10,7 @@ on:
       - 'app/package-lock.json'
       - '.github/workflows/edit-text-regression.yml'
   push:
-    branches: [main]
+    branches: [main, fix/vietnamese-edit-text-roundtrip]
     paths:
       - 'app/src/js/editcore/**'
       - 'app/src/tests/editcore-smoke.test.ts'
