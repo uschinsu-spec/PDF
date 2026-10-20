@@ -10300,13 +10300,16 @@ const VIETNAMESE_COVERAGE_SAMPLE = Array.from(
   .map((ch) => ch.codePointAt(0));
 
 async function preloadVietnameseFallbackFont(text) {
-  const cps = [
-    ...new Set(
-      Array.from(text || 'Tiếng Việt có dấu: ă â ê ô ơ ư đ ắ ằ ặ ễ ệ ộ ợ ứ ừ ự')
-        .filter((ch) => needsFontEmbedding(ch))
-        .map((ch) => ch.codePointAt(0))
-    ),
-  ];
+  const cps =
+    text == null
+      ? VIETNAMESE_COVERAGE_SAMPLE
+      : [
+          ...new Set(
+            Array.from(text)
+              .filter((ch) => needsFontEmbedding(ch))
+              .map((ch) => ch.codePointAt(0))
+          ),
+        ];
   if (!cps.length) return true;
 
   for (const bytes of PdfEngine.fallbackFonts.values()) {
