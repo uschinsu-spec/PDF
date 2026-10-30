@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
-import { canvasRectToPdfBounds, clampCanvasRect, rectsIntersect } from '../js/logic/pdf-region-geometry';
+import { canvasRectToPdfBounds, clampCanvasRect, rasterRegionScaleFactor, rectsIntersect } from '../js/logic/pdf-region-geometry';
 
 describe('PDF region geometry',()=>{
  it('rounds both selection edges before calculating the final dimensions',()=>{
@@ -22,6 +22,12 @@ describe('PDF region geometry',()=>{
  });
  it('rejects a non-invertible viewport transform',()=>{
   expect(()=>canvasRectToPdfBounds({x:0,y:0,w:1,h:1},[1,2,2,4,0,0])).toThrow('not invertible');
+ });
+ it('upscales compact raster fallback captures within a memory budget',()=>{
+  expect(rasterRegionScaleFactor({x:0,y:0,w:1000,h:500})).toBeCloseTo(8/3);
+ });
+ it('keeps very large fallback regions at the preview resolution',()=>{
+  expect(rasterRegionScaleFactor({x:0,y:0,w:9000,h:9000})).toBeNull();
  });
  it('detects overlap for deciding when a raster appearance fallback is required',()=>{
   expect(rectsIntersect({x:0,y:0,w:10,h:10},{x:9,y:9,w:5,h:5})).toBe(true);

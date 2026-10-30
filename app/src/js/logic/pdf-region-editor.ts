@@ -1,6 +1,6 @@
 import * as pdfjs from 'pdfjs-dist';
 import { PDFDocument, degrees, rgb } from 'pdf-lib';
-import { canvasRectToPdfBounds, clampCanvasRect, rectsIntersect, type PdfBounds } from './pdf-region-geometry';
+import { canvasRectToPdfBounds, clampCanvasRect, rasterRegionScaleFactor, rectsIntersect, type PdfBounds } from './pdf-region-geometry';
 import '../utils/setup-pdf-worker.js';
 
 type Box = { x:number;y:number;w:number;h:number };
@@ -144,6 +144,41 @@ function region(){
  if(!selection||selection.w<3||selection.h<3){say('Chọn vùng hình chữ nhật trước.');return null}
  return clampCanvasRect(selection,canvas.width,canvas.height);
 }
+async function captureRasterRegion(sourcePage:pdfjs.PDFPageProxy,box:Box,sourcePageIndex:number):Promise<string|null>{
+ const factor=rasterRegionScaleFactor(box);
+ if(factor===null)return null;
+ const viewport=sourcePage.getViewport({scale:1.5*factor});
+ const left=Math.max(0,Math.floor(box.x*factor));
+ const top=Math.max(0,Math.floor(box.y*factor));
+ const right=Math.min(Math.ceil(viewport.width),Math.ceil((box.x+box.w)*factor));
+ const bottom=Math.min(Math.ceil(viewport.height),Math.ceil((box.y+box.h)*factor));
+ const width=Math.max(1,right-left),height=Math.max(1,bottom-top);
+ const off=document.createElement('canvas');off.width=width;off.height=height;
+ const offCtx=off.getContext('2d');if(!offCtx)throw new Error('Không thể tạo canvas sao chép vùng.');
+ offCtx.fillStyle='#ffffff';offCtx.fillRect(0,0,width,height);
+ await sourcePage.render({
+  canvas:off,canvasContext:offCtx,viewport,
+  transform:[1,0,0,1,-left,-top],
+ }).promise;
+ offCtx.save();
+ offCtx.translate(-left,-top);offCtx.scale(factor,factor);
+ for(const c of covers.filter(c=>c.page===sourcePageIndex)){
+  offCtx.fillStyle='#ffffff';offCtx.fillRect(c.box.x,c.box.y,c.box.w,c.box.h);
+ }
+ for(const stamp of stamps.filter(s=>s.page===sourcePageIndex)){
+  const preview=stamp.kind==='raster'?await applyStrength(stamp.data,stamp.strength):stamp.data;
+  const img=await loadImage(preview);
+  offCtx.save();
+  offCtx.translate(stamp.x+stamp.w/2,stamp.y+stamp.h/2);
+  offCtx.rotate(stamp.rotation*Math.PI/180);
+  offCtx.globalAlpha=stamp.opacity;
+  offCtx.drawImage(img,-stamp.w/2,-stamp.h/2,stamp.w,stamp.h);
+  offCtx.restore();
+ }
+ offCtx.restore();
+ return off.toDataURL('image/png');
+}
+
 async function copy(cut:boolean){
  const b=region();if(!b)return;
  if(!raw||!pdf||!viewportTransform){say('Không thể xác định tọa độ PDF của vùng chọn.');return}
@@ -169,9 +204,16 @@ async function copy(cut:boolean){
  selection=null;active=null;
  try{
   await draw();
-  const off=document.createElement('canvas');off.width=Math.max(1,b.w);off.height=Math.max(1,b.h);
-  off.getContext('2d')!.drawImage(canvas,b.x,b.y,b.w,b.h,0,0,off.width,off.height);
-  clip={data:off.toDataURL('image/png'),w:b.w,h:b.h,sourcePage:page,source:{...b},kind,sourceBounds,sourceRotation:viewportRotation,...(kind==='vector'?{sourceBytes:raw}:{})};
+  let previewData:string;
+  if(kind==='raster'){
+   previewData=await captureRasterRegion(sourcePage,b,page)??'';
+  }else previewData='';
+  if(!previewData){
+   const off=document.createElement('canvas');off.width=Math.max(1,b.w);off.height=Math.max(1,b.h);
+   off.getContext('2d')!.drawImage(canvas,b.x,b.y,b.w,b.h,0,0,off.width,off.height);
+   previewData=off.toDataURL('image/png');
+  }
+  clip={data:previewData,w:b.w,h:b.h,sourcePage:page,source:{...b},kind,sourceBounds,sourceRotation:viewportRotation,...(kind==='vector'?{sourceBytes:raw}:{})};
  }finally{
   selection=keptSelection;active=keptActive;await draw();
  }
