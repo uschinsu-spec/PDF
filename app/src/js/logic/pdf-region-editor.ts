@@ -165,11 +165,16 @@ async function copy(cut:boolean){
   return rectsIntersect({x:s.x+s.w/2-halfW,y:s.y+s.h/2-halfH,w:2*halfW,h:2*halfH},b);
  })||covers.some(c=>c.page===page&&rectsIntersect(c.box,b));
  const kind: 'vector'|'raster' = hasAnnotation||hasOverlay?'raster':'vector';
- const kept=selection;selection=null;await draw();
- const off=document.createElement('canvas');off.width=Math.max(1,b.w);off.height=Math.max(1,b.h);
- off.getContext('2d')!.drawImage(canvas,b.x,b.y,b.w,b.h,0,0,off.width,off.height);
- clip={data:off.toDataURL('image/png'),w:b.w,h:b.h,sourcePage:page,source:{...b},kind,sourceBounds,sourceRotation:viewportRotation,...(kind==='vector'?{sourceBytes:raw}:{})};
- selection=kept;
+ const keptSelection=selection,keptActive=active;
+ selection=null;active=null;
+ try{
+  await draw();
+  const off=document.createElement('canvas');off.width=Math.max(1,b.w);off.height=Math.max(1,b.h);
+  off.getContext('2d')!.drawImage(canvas,b.x,b.y,b.w,b.h,0,0,off.width,off.height);
+  clip={data:off.toDataURL('image/png'),w:b.w,h:b.h,sourcePage:page,source:{...b},kind,sourceBounds,sourceRotation:viewportRotation,...(kind==='vector'?{sourceBytes:raw}:{})};
+ }finally{
+  selection=keptSelection;active=keptActive;await draw();
+ }
  if(cut){snapshot();covers.push({page,box:b});selection=null;await draw()}
  say(cut?'Đã cắt vùng (nội dung đã lưu vào clipboard).':kind==='vector'?'Đã sao chép vùng PDF dạng vector.':'Đã sao chép vùng có lớp phủ/annotation dưới dạng ảnh để giữ nguyên hiển thị.');
 }
