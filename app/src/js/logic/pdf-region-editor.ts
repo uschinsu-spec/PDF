@@ -157,12 +157,18 @@ async function copy(cut:boolean){
   const bottom=Math.min(r[1],r[3]),top=Math.max(r[1],r[3]);
   return left<sourceBounds.right&&right>sourceBounds.left&&bottom<sourceBounds.top&&top>sourceBounds.bottom;
  });
- const hasOverlay=stamps.some(s=>s.page===page&&rectsIntersect(s,b))||covers.some(c=>c.page===page&&rectsIntersect(c.box,b));
+ const hasOverlay=stamps.some(s=>{
+  if(s.page!==page)return false;
+  const rad=s.rotation*Math.PI/180;
+  const halfW=(Math.abs(Math.cos(rad))*s.w+Math.abs(Math.sin(rad))*s.h)/2;
+  const halfH=(Math.abs(Math.sin(rad))*s.w+Math.abs(Math.cos(rad))*s.h)/2;
+  return rectsIntersect({x:s.x+s.w/2-halfW,y:s.y+s.h/2-halfH,w:2*halfW,h:2*halfH},b);
+ })||covers.some(c=>c.page===page&&rectsIntersect(c.box,b));
  const kind: 'vector'|'raster' = hasAnnotation||hasOverlay?'raster':'vector';
  const kept=selection;selection=null;await draw();
  const off=document.createElement('canvas');off.width=Math.max(1,b.w);off.height=Math.max(1,b.h);
  off.getContext('2d')!.drawImage(canvas,b.x,b.y,b.w,b.h,0,0,off.width,off.height);
- clip={data:off.toDataURL('image/png'),w:b.w,h:b.h,sourcePage:page,source:{...b},kind,sourceBounds,sourceRotation:viewportRotation,...(kind==='vector'?{sourceBytes:raw.slice()}:{})};
+ clip={data:off.toDataURL('image/png'),w:b.w,h:b.h,sourcePage:page,source:{...b},kind,sourceBounds,sourceRotation:viewportRotation,...(kind==='vector'?{sourceBytes:raw}:{})};
  selection=kept;
  if(cut){snapshot();covers.push({page,box:b});selection=null;await draw()}
  say(cut?'Đã cắt vùng (nội dung đã lưu vào clipboard).':kind==='vector'?'Đã sao chép vùng PDF dạng vector.':'Đã sao chép vùng có lớp phủ/annotation dưới dạng ảnh để giữ nguyên hiển thị.');
@@ -211,6 +217,7 @@ el('save').onclick=async()=>{
     const width=dest.right-dest.left,height=dest.top-dest.bottom;
     const cx=(dest.left+dest.right)/2,cy=(dest.bottom+dest.top)/2;
     let embedded=false;
+    if(s.kind==='raster')rasterFallbacks++;
     if(s.kind==='vector'&&s.sourceBytes){
      try{
       let sourceDoc=sourceDocs.get(s.sourceBytes);
