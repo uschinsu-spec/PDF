@@ -177,7 +177,13 @@ el('copy').onclick=()=>void copy(false);el('cut').onclick=()=>void copy(true);
 el('paste').onclick=()=>{
  if(!clip||!pdf){say('Chưa có vùng sao chép.');return}
  snapshot();const margin=12;const source=clip.source;const nearby=page===clip.sourcePage;
- const pasteX=nearby?(source.x+source.w+margin+clip.w<=canvas.width?source.x+source.w+margin:source.x-clip.w-margin>=0?source.x-clip.w-margin:Math.min(Math.max(0,source.x+margin),Math.max(0,canvas.width-clip.w)):Math.max(0,(canvas.width-clip.w)/2);
+ const pasteX=nearby
+  ? (source.x+source.w+margin+clip.w<=canvas.width
+    ? source.x+source.w+margin
+    : source.x-clip.w-margin>=0
+     ? source.x-clip.w-margin
+     : Math.min(Math.max(0,source.x+margin),Math.max(0,canvas.width-clip.w)))
+  : Math.max(0,(canvas.width-clip.w)/2);
  const pasteY=nearby?Math.max(0,Math.min(source.y,canvas.height-clip.h)):Math.max(0,(canvas.height-clip.h)/2);
  const s:Stamp={id:++serial,page,data:clip.data,x:pasteX,y:pasteY,w:clip.w,h:clip.h,baseW:clip.w,baseH:clip.h,opacity:1,rotation:0,strength:100,kind:clip.kind,sourcePage:clip.sourcePage,sourceBounds:{...clip.sourceBounds},sourceRotation:clip.sourceRotation,...(clip.sourceBytes?{sourceBytes:clip.sourceBytes}:{})};
  stamps.push(s);active=s.id;selection=null;sync();void draw();say(clip.kind==='vector'?'Đã dán vùng PDF vector; nội dung gốc được giữ lại.':'Đã dán vùng; vùng này dùng ảnh dự phòng để giữ nguyên hiển thị.');
