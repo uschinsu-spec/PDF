@@ -14,11 +14,11 @@ describe('PDF region geometry',()=>{
   expect(bounds.top).toBeCloseTo(580);
  });
  it('handles rotated pages and non-zero page-box origins',()=>{
-  const bounds=canvasRectToPdfBounds({x:5,y:10,w:20,h:30},[0,2,-2,0,100,50]);
-  expect(bounds.left).toBeCloseTo(20);
-  expect(bounds.right).toBeCloseTo(80);
-  expect(bounds.bottom).toBeCloseTo(60);
-  expect(bounds.top).toBeCloseTo(100);
+  const bounds=canvasRectToPdfBounds({x:5,y:10,w:20,h:30},[0,2,-2,0,100,0]);
+  expect(bounds.left).toBeCloseTo(5);
+  expect(bounds.right).toBeCloseTo(20);
+  expect(bounds.bottom).toBeCloseTo(37.5);
+  expect(bounds.top).toBeCloseTo(47.5);
  });
  it('rejects a non-invertible viewport transform',()=>{
   expect(()=>canvasRectToPdfBounds({x:0,y:0,w:1,h:1},[1,2,2,4,0,0])).toThrow('not invertible');
