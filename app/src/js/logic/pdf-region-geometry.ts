@@ -36,7 +36,7 @@ export function rectsIntersect(a:CanvasRect,b:CanvasRect):boolean {
 }
 
 /** Return a safe raster upscaling factor for fallback captures, or null if the base size is already too large. */
-export function rasterRegionScaleFactor(rect:CanvasRect,maxSide=8192,maxPixels=24_000_000,maxFactor=4/1.5):number|null {
+export function rasterRegionScaleFactor(rect:CanvasRect,maxSide=8192,maxPixels=16_000_000,maxFactor=4/1.5):number|null {
   const width=Math.max(1,Math.ceil(rect.w));
   const height=Math.max(1,Math.ceil(rect.h));
   if(width>maxSide||height>maxSide||width*height>maxPixels)return null;

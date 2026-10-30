@@ -206,7 +206,7 @@ async function copy(cut:boolean){
   await draw();
   let previewData:string;
   if(kind==='raster'){
-   previewData=await captureRasterRegion(sourcePage,b,page)??'';
+   try{previewData=await captureRasterRegion(sourcePage,b,page)??''}catch{previewData=''};
   }else previewData='';
   if(!previewData){
    const off=document.createElement('canvas');off.width=Math.max(1,b.w);off.height=Math.max(1,b.h);
